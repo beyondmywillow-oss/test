@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>My Trip Planner ✈️</title>
+    <title>My Trip Planner 🥥</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
@@ -26,7 +26,7 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
-        // --- Icon Components ---
+        // --- Icons ---
         const IconBase = ({ children, size = 18, className = "" }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>
         );
@@ -41,36 +41,31 @@
         const Home = (props) => <IconBase {...props}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></IconBase>;
         const Calculator = (props) => <IconBase {...props}><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></IconBase>;
         const ArrowRightLeft = (props) => <IconBase {...props}><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></IconBase>;
-        const Pencil = (props) => <IconBase {...props}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></IconBase>;
         const Wallet = (props) => <IconBase {...props}><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></IconBase>;
         const ChevronDown = (props) => <IconBase {...props}><path d="m6 9 6 6 6-6"/></IconBase>;
         const ChevronUp = (props) => <IconBase {...props}><path d="m18 15-6-6-6 6"/></IconBase>;
 
         const TripPlanner = () => {
             const [activeTab, setActiveTab] = useState('itinerary'); 
-            const [destination, setDestination] = useState(() => localStorage.getItem('dynamicTripDest') || 'Paris Trip ✈️');
-            const [isEditingDest, setIsEditingDest] = useState(false);
-            
+            const [destination, setDestination] = useState(() => localStorage.getItem('tripDestV6') || 'Europe Trip ✈️');
             const [days, setDays] = useState(() => {
-                const saved = localStorage.getItem('dynamicTripDataV5');
-                return saved ? JSON.parse(saved) : [{ id: 1, date: "1일차", title: "도착", events: [] }];
+                const saved = localStorage.getItem('tripDaysV6');
+                return saved ? JSON.parse(saved) : [{ id: Date.now(), title: "Day 1", events: [] }];
             });
-            const [selectedDayId, setSelectedDayId] = useState(days[0]?.id || 1);
-            
+            const [selectedDayId, setSelectedDayId] = useState(days[0]?.id);
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [isConverterOpen, setIsConverterOpen] = useState(false);
             const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
             const [editingEventId, setEditingEventId] = useState(null);
             const [expandedCategory, setExpandedCategory] = useState(null);
-
-            const [exchangeRate, setExchangeRate] = useState(1450);
-            const [convertValues, setConvertValues] = useState({ eur: '', krw: '' });
-            const [totalBudget, setTotalBudget] = useState(() => Number(localStorage.getItem('dynamicTripBudget')) || 0);
+            const [exchangeRate, setExchangeRate] = useState(1719); 
+            const [totalBudget, setTotalBudget] = useState(() => Number(localStorage.getItem('tripBudgetV6')) || 0);
             const [newEntry, setNewEntry] = useState({ type: 'visit', title: '', time: '12:00', cost: '', note: '' });
+            const [convertValues, setConvertValues] = useState({ eur: '', krw: '' });
 
-            useEffect(() => { localStorage.setItem('dynamicTripDataV5', JSON.stringify(days)); }, [days]);
-            useEffect(() => { localStorage.setItem('dynamicTripBudget', totalBudget); }, [totalBudget]);
-            useEffect(() => { localStorage.setItem('dynamicTripDest', destination); }, [destination]);
+            useEffect(() => { localStorage.setItem('tripDaysV6', JSON.stringify(days)); }, [days]);
+            useEffect(() => { localStorage.setItem('tripBudgetV6', totalBudget); }, [totalBudget]);
+            useEffect(() => { localStorage.setItem('tripDestV6', destination); }, [destination]);
 
             useEffect(() => {
                 fetch('https://api.exchangerate-api.com/v4/latest/EUR')
@@ -81,14 +76,14 @@
 
             const addDay = () => {
                 const newId = Date.now();
-                setDays([...days, { id: newId, date: `${days.length + 1}일차`, title: "새로운 일정", events: [] }]);
+                setDays([...days, { id: newId, title: `Day ${days.length + 1}`, events: [] }]);
                 setSelectedDayId(newId);
             };
 
             const deleteDay = (id, e) => {
                 e.stopPropagation();
                 if (days.length <= 1) return;
-                if (confirm("이 날의 모든 일정이 삭제됩니다. 삭제할까요?")) {
+                if (confirm("이 날의 모든 일정이 삭제됩니다.")) {
                     const filtered = days.filter(d => d.id !== id);
                     setDays(filtered);
                     if (selectedDayId === id) setSelectedDayId(filtered[0].id);
@@ -109,10 +104,9 @@
 
             const currentDay = days.find(d => d.id === selectedDayId) || days[0];
             const stats = useMemo(() => days.reduce((acc, d) => acc + d.events.reduce((s, e) => s + (e.cost || 0), 0), 0), [days]);
-            const remainingBudget = totalBudget - stats;
             const spendPercent = totalBudget > 0 ? Math.min(100, (stats / totalBudget) * 100) : 0;
 
-            const categoryInfo = {
+            const categoryStyle = {
                 food: { label: '식비', color: { bg: "bg-orange-50", text: "text-orange-600", border: "border-orange-100" }, icon: (c) => <Utensils className={c} /> },
                 visit: { label: '관광', color: { bg: "bg-lime-100", text: "text-lime-700", border: "border-lime-200" }, icon: (c) => <MapPin className={c} /> },
                 shop: { label: '쇼핑', color: { bg: "bg-purple-100", text: "text-purple-600", border: "border-purple-200" }, icon: (c) => <ShoppingBag className={c} /> },
@@ -127,14 +121,12 @@
             }, [days]);
 
             return (
-                <div className="max-w-md mx-auto h-screen bg-[#FDFCF8] flex flex-col font-sans text-slate-700 shadow-2xl">
-                    <header className="px-4 pt-6 pb-2 bg-white/90 backdrop-blur-md sticky top-0 z-30 border-b border-stone-100">
+                <div className="max-w-md mx-auto h-screen bg-[#FDFCF8] flex flex-col font-sans text-slate-700">
+                    <header className="px-4 pt-6 pb-2 bg-white/90 border-b border-stone-100 sticky top-0 z-30">
                         <div className="flex justify-between items-center mb-3">
-                            <div onClick={() => setIsEditingDest(true)} className="flex items-center gap-2 cursor-pointer flex-1">
-                                {isEditingDest ? <input autoFocus className="font-cooper text-xl outline-none bg-transparent border-b border-stone-300 w-full" value={destination} onChange={e => setDestination(e.target.value)} onBlur={() => setIsEditingDest(false)} /> : <h1 className="font-cooper text-xl truncate">{destination} <Pencil size={12} className="inline text-stone-300 ml-1"/></h1>}
-                            </div>
+                            <input className="font-cooper text-xl bg-transparent outline-none w-2/3" value={destination} onChange={e => setDestination(e.target.value)} />
                             <div className="flex items-center gap-3">
-                                <button onClick={() => setIsConverterOpen(true)} className="p-2 bg-stone-100 rounded-full text-stone-600 hover:bg-stone-200 transition-colors"><Calculator size={18} /></button>
+                                <button onClick={() => setIsConverterOpen(true)} className="p-2 bg-stone-100 rounded-full text-stone-600"><Calculator size={18} /></button>
                                 <div className="text-right">
                                     <p className="text-[10px] font-bold text-stone-400">TOTAL</p>
                                     <p className="text-lg font-bold leading-none">{stats.toLocaleString()} €</p>
@@ -144,10 +136,10 @@
                         <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide">
                             {days.map((day, idx) => (
                                 <div key={day.id} className="relative group shrink-0">
-                                    <button onClick={() => setSelectedDayId(day.id)} className={`flex flex-col items-center justify-center min-w-[56px] h-[56px] rounded-xl transition-all border ${selectedDayId === day.id ? 'bg-lime-100 border-lime-300 text-lime-800 shadow-sm scale-105' : 'bg-white border-stone-100 text-stone-400'}`}>
+                                    <button onClick={() => setSelectedDayId(day.id)} className={`flex flex-col items-center justify-center min-w-[56px] h-[56px] rounded-xl border transition-all ${selectedDayId === day.id ? 'bg-lime-100 border-lime-300 text-lime-800 shadow-sm scale-105' : 'bg-white border-stone-100 text-stone-400'}`}>
                                         <span className="text-[10px] font-bold uppercase">DAY</span><span className="text-sm font-bold">{idx + 1}</span>
                                     </button>
-                                    {days.length > 1 && <button onClick={(e) => deleteDay(day.id, e)} className="absolute -top-1 -right-1 bg-red-400 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100"><X size={8}/></button>}
+                                    {days.length > 1 && <button onClick={(e) => deleteDay(day.id, e)} className="absolute -top-1 -right-1 bg-red-400 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><X size={8}/></button>}
                                 </div>
                             ))}
                             <button onClick={addDay} className="min-w-[56px] h-[56px] rounded-xl border-2 border-dashed border-stone-200 text-stone-300 flex items-center justify-center hover:bg-stone-50"><Plus size={20}/></button>
@@ -158,15 +150,15 @@
                         </div>
                     </header>
 
-                    <main className="flex-1 overflow-y-auto px-4 py-4 pb-24 scrollbar-hide">
+                    <main className="flex-1 overflow-y-auto px-4 py-5 scrollbar-hide">
                         {activeTab === 'itinerary' ? (
                             <div className="space-y-4">
-                                <div className="bg-stone-800 text-white p-4 rounded-2xl flex justify-between items-center shadow-lg">
+                                <div className="bg-stone-800 text-white p-4 rounded-2xl mb-6 shadow-lg flex justify-between items-center">
                                     <input className="bg-transparent font-bold text-lg outline-none w-full" value={currentDay.title} onChange={e => setDays(days.map(d => d.id === selectedDayId ? {...d, title: e.target.value} : d))} />
                                     <span className="text-lime-400 font-black text-xl ml-2">D-{days.findIndex(d => d.id === selectedDayId) + 1}</span>
                                 </div>
                                 {currentDay.events.map((event, index) => {
-                                    const info = categoryInfo[event.type] || categoryInfo.visit;
+                                    const info = categoryStyle[event.type] || categoryStyle.visit;
                                     return (
                                         <div key={event.id} className="relative pl-3">
                                             {index !== currentDay.events.length - 1 && <div className="absolute left-[22px] top-10 bottom-[-24px] w-[2px] bg-stone-100"></div>}
@@ -188,23 +180,23 @@
                                 <button onClick={() => { setEditingEventId(null); setNewEntry({type: 'visit', title: '', time: '12:00', cost: '', note: ''}); setIsModalOpen(true); }} className="w-full py-4 rounded-xl border-2 border-dashed border-stone-200 text-stone-400 font-bold text-sm hover:border-lime-400 transition-all">+ 일정 추가하기</button>
                             </div>
                         ) : (
-                            <div className="space-y-4">
+                            <div className="space-y-5">
                                 <div className="bg-white rounded-3xl p-5 shadow-sm border border-stone-100">
                                     <div className="flex justify-between items-start mb-4">
-                                        <div><p className="text-stone-400 text-[10px] font-bold uppercase tracking-wider">Total Budget</p>{totalBudget === 0 ? <button onClick={() => setIsBudgetModalOpen(true)} className="text-blue-500 text-sm font-bold underline">금액 입력</button> : <h2 onClick={() => setIsBudgetModalOpen(true)} className="text-2xl font-black text-stone-800 cursor-pointer">{totalBudget.toLocaleString()} €</h2>}</div>
-                                        <div className="text-right"><p className="text-stone-400 text-[10px] font-bold uppercase tracking-wider">Remaining</p><h2 className={`text-xl font-black ${remainingBudget >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>{remainingBudget.toLocaleString()} €</h2></div>
+                                        <div><p className="text-stone-400 text-[10px] font-bold uppercase tracking-wider mb-1">Total Budget</p>{totalBudget === 0 ? <button onClick={() => setIsBudgetModalOpen(true)} className="text-blue-500 text-sm font-bold underline">금액 입력</button> : <h2 onClick={() => setIsBudgetModalOpen(true)} className="text-2xl font-black text-stone-800 cursor-pointer">{totalBudget.toLocaleString()} €</h2>}</div>
+                                        <div className="text-right"><p className="text-stone-400 text-[10px] font-bold uppercase tracking-wider mb-1">Spent</p><h2 className="text-xl font-black text-stone-700">{stats.toLocaleString()} €</h2></div>
                                     </div>
                                     <div className="h-2.5 bg-stone-100 rounded-full overflow-hidden mb-2"><div className={`h-full transition-all duration-500 ${spendPercent > 100 ? 'bg-red-400' : 'bg-purple-400'}`} style={{width: `${spendPercent}%`}}></div></div>
-                                    <div className="flex justify-between text-[10px] font-bold text-stone-400"><span>지출 {stats.toLocaleString()} € ({Math.round(spendPercent)}%)</span><span>잔액 {remainingBudget.toLocaleString()} €</span></div>
+                                    <div className="flex justify-between text-[10px] font-bold text-stone-400"><span>지출비율 {Math.round(spendPercent)}%</span><span>남은 예산 {(totalBudget - stats).toLocaleString()} €</span></div>
                                 </div>
                                 <div className="space-y-3">
                                     {Object.entries(expensesByCategory).map(([type, total]) => {
                                         if (total === 0) return null;
-                                        const info = categoryInfo[type];
+                                        const info = categoryStyle[type];
                                         return (
-                                            <div key={type} className="bg-white rounded-2xl p-4 flex justify-between items-center shadow-sm border border-stone-50">
-                                                <div className="flex items-center gap-3"><div className={`w-10 h-10 rounded-full ${info.color.bg} flex items-center justify-center`}>{info.icon(info.color.text)}</div><div><h4 className="font-bold text-stone-700 text-sm">{info.label}</h4><p className="text-[10px] text-stone-400">Total Spent</p></div></div>
-                                                <span className="font-bold text-stone-700">{total.toLocaleString()} €</span>
+                                            <div key={type} onClick={() => setExpandedCategory(expandedCategory === type ? null : type)} className="bg-white rounded-2xl p-4 flex justify-between items-center shadow-sm border border-stone-50 cursor-pointer transition-all hover:border-stone-200">
+                                                <div className="flex items-center gap-3"><div className={`w-10 h-10 rounded-full ${info.color.bg} flex items-center justify-center`}>{info.icon(info.color.text)}</div><h4 className="font-bold text-stone-700 text-sm">{info.label}</h4></div>
+                                                <div className="flex items-center gap-2"><span className="font-bold text-stone-700">{total.toLocaleString()} €</span>{expandedCategory === type ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}</div>
                                             </div>
                                         );
                                     })}
@@ -216,10 +208,10 @@
                     {/* Modals */}
                     {isModalOpen && (
                         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm p-4">
-                            <div className="bg-white w-full max-w-md p-6 rounded-3xl shadow-xl animate-in slide-in-from-bottom duration-300">
+                            <div className="bg-white w-full max-w-md p-6 rounded-t-3xl shadow-xl animate-in slide-in-from-bottom duration-300">
                                 <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-lg">{editingEventId ? '일정 수정' : '새 일정 추가'}</h3><button onClick={() => setIsModalOpen(false)} className="p-1 bg-stone-100 rounded-full"><X size={18}/></button></div>
                                 <div className="space-y-4">
-                                    <div className="grid grid-cols-5 gap-2">{Object.entries(categoryInfo).map(([k, v]) => (
+                                    <div className="grid grid-cols-5 gap-2">{Object.entries(categoryStyle).map(([k, v]) => (
                                         <button key={k} onClick={() => setNewEntry({...newEntry, type: k})} className={`py-2 rounded-xl text-[10px] font-bold border transition-all ${newEntry.type === k ? 'bg-stone-800 text-white border-stone-800' : 'bg-white text-stone-400 border-stone-100'}`}>{v.label}</button>
                                     ))}</div>
                                     <input className="w-full bg-stone-50 p-3 rounded-xl outline-none text-sm" placeholder="장소명" value={newEntry.title} onChange={e => setNewEntry({...newEntry, title: e.target.value})}/>
@@ -227,31 +219,32 @@
                                         <input type="time" className="flex-1 bg-stone-50 p-3 rounded-xl outline-none text-sm" value={newEntry.time} onChange={e => setNewEntry({...newEntry, time: e.target.value})}/>
                                         <input type="number" className="flex-1 bg-stone-50 p-3 rounded-xl outline-none text-sm" placeholder="비용(€)" value={newEntry.cost} onChange={e => setNewEntry({...newEntry, cost: e.target.value})}/>
                                     </div>
-                                    <button onClick={handleSaveEntry} className="w-full bg-lime-400 text-lime-900 py-4 rounded-xl font-bold shadow-lg mt-2">저장하기</button>
+                                    <button onClick={handleSaveEntry} className="w-full bg-lime-400 text-lime-900 py-4 rounded-xl font-bold shadow-lg">저장하기</button>
                                 </div>
                             </div>
                         </div>
                     )}
 
                     {isConverterOpen && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-6">
-                            <div className="bg-white w-full max-w-xs p-6 rounded-3xl shadow-xl">
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-6" onClick={() => setIsConverterOpen(false)}>
+                            <div className="bg-white w-full max-w-xs p-6 rounded-3xl shadow-xl" onClick={e => e.stopPropagation()}>
                                 <div className="flex justify-between items-center mb-6"><h3 className="font-bold flex items-center gap-2"><Calculator className="text-purple-500"/> 환율 계산기</h3><button onClick={() => setIsConverterOpen(false)}><X size={18}/></button></div>
                                 <div className="space-y-4">
-                                    <div className="bg-stone-50 p-3 rounded-xl text-[10px] font-bold text-stone-400 text-center uppercase tracking-widest">Live Rate: 1 € = {exchangeRate} KRW</div>
-                                    <div className="relative"><label className="text-[10px] font-bold text-stone-400 absolute top-2 left-3">EUR (€)</label><input type="number" className="w-full bg-stone-50 p-3 pt-6 rounded-xl text-lg font-bold outline-none" value={convertValues.eur} onChange={e => setConvertValues({eur: e.target.value, krw: e.target.value ? Math.round(e.target.value * exchangeRate) : ''})}/></div>
-                                    <div className="relative"><label className="text-[10px] font-bold text-stone-400 absolute top-2 left-3">KRW (원)</label><input type="number" className="w-full bg-stone-50 p-3 pt-6 rounded-xl text-lg font-bold outline-none" value={convertValues.krw} onChange={e => setConvertValues({eur: e.target.value ? (e.target.value / exchangeRate).toFixed(2) : '', krw: e.target.value})}/></div>
+                                    <div className="bg-stone-50 p-3 rounded-xl text-[10px] font-bold text-stone-400 text-center uppercase tracking-widest">1 € = {exchangeRate} KRW</div>
+                                    <div className="relative"><label className="text-[10px] font-bold text-stone-400 absolute top-2 left-3">EUR (€)</label><input type="number" className="w-full bg-stone-50 p-3 pt-6 rounded-xl text-lg font-bold outline-none border border-transparent focus:border-purple-300 transition-all" value={convertValues.eur} onChange={e => setConvertValues({eur: e.target.value, krw: e.target.value ? Math.round(e.target.value * exchangeRate) : ''})}/></div>
+                                    <div className="relative"><label className="text-[10px] font-bold text-stone-400 absolute top-2 left-3">KRW (원)</label><input type="number" className="w-full bg-stone-50 p-3 pt-6 rounded-xl text-lg font-bold outline-none border border-transparent focus:border-purple-300 transition-all" value={convertValues.krw} onChange={e => setConvertValues({eur: e.target.value ? (e.target.value / exchangeRate).toFixed(2) : '', krw: e.target.value})}/></div>
                                 </div>
+                                <button onClick={() => setConvertValues({eur: '', krw: ''})} className="w-full mt-6 py-2 bg-stone-100 text-stone-400 font-bold text-xs rounded-lg">초기화</button>
                             </div>
                         </div>
                     )}
 
                     {isBudgetModalOpen && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-6">
-                            <div className="bg-white w-full max-w-xs p-6 rounded-3xl shadow-xl">
-                                <h3 className="font-bold mb-4 flex items-center gap-2"><Wallet className="text-emerald-500"/> 예산 설정</h3>
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-6" onClick={() => setIsBudgetModalOpen(false)}>
+                            <div className="bg-white w-full max-w-xs p-6 rounded-3xl shadow-xl" onClick={e => e.stopPropagation()}>
+                                <h3 className="font-bold mb-4 flex items-center gap-2 font-cooper"><Wallet className="text-emerald-500"/> Set Budget</h3>
                                 <input type="number" className="w-full bg-stone-50 p-4 rounded-xl text-lg font-bold outline-none mb-4" placeholder="총 예산(€)" value={totalBudget || ''} onChange={e => setTotalBudget(Number(e.target.value))}/>
-                                <button onClick={() => setIsBudgetModalOpen(false)} className="w-full py-3 bg-emerald-500 text-white font-bold rounded-xl">저장</button>
+                                <button onClick={() => setIsBudgetModalOpen(false)} className="w-full py-4 bg-emerald-500 text-white font-bold rounded-xl shadow-lg">예산 저장</button>
                             </div>
                         </div>
                     )}
