@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>My Trip Planner ✈️</title>
+    <title>My Trip Planner 🥥</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chonburi&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Pretendard', sans-serif; background-color: #FDFCF8; }
-        .font-cooper { font-family: 'Cooper Black', serif; }
+        .font-cooper { font-family: 'Cooper Black', 'Chonburi', serif; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body>
@@ -21,43 +23,43 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
-        // --- 아이콘 컴포넌트 (오타 수정 완료) ---
         const IconBase = ({ children, size = 18, className = "" }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>
         );
+        const MapPin = (props) => <IconBase {...props}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></IconBase>;
+        const Utensils = (props) => <IconBase {...props}><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></IconBase>;
+        const ShoppingBag = (props) => <IconBase {...props}><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></IconBase>;
+        const Car = (props) => <IconBase {...props}><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></IconBase>;
         const Plus = (props) => <IconBase {...props}><path d="M5 12h14"/><path d="M12 5v14"/></IconBase>;
         const X = (props) => <IconBase {...props}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconBase>;
         const Trash2 = (props) => <IconBase {...props}><path d="M3 6h18"/><path d="M19 6v14c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V6"/><path d="M8 6V4c0-1.1.9-2 2-2h4c1.1 0 2 .9 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></IconBase>;
-        const MapPin = (props) => <IconBase {...props}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></IconBase>;
-        const Utensils = (props) => <IconBase {...props}><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></IconBase>;
+        const Home = (props) => <IconBase {...props}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></IconBase>;
 
         const TripPlanner = () => {
-            const [destination, setDestination] = useState(() => localStorage.getItem('tripDest') || 'Europe Trip ✈️');
+            const [destination, setDestination] = useState(() => localStorage.getItem('tripDestV4') || 'Europe Trip ✈️');
             const [days, setDays] = useState(() => {
-                const saved = localStorage.getItem('tripDaysV3');
-                return saved ? JSON.parse(saved) : [{ id: 1, title: "1일차", events: [] }];
+                const saved = localStorage.getItem('tripDaysV4');
+                return saved ? JSON.parse(saved) : [{ id: 1, date: "Day 1", events: [] }];
             });
             const [selectedDayId, setSelectedDayId] = useState(days[0]?.id);
-            const [exchangeRate, setExchangeRate] = useState(1719); 
+            const [exchangeRate, setExchangeRate] = useState(1719);
             const [isModalOpen, setIsModalOpen] = useState(false);
-            const [newEntry, setNewEntry] = useState({ type: 'visit', title: '', time: '12:00', cost: '', note: '' });
+            const [newEntry, setNewEntry] = useState({ type: 'visit', title: '', time: '10:00', cost: '', note: '' });
 
-            // 실시간 환율 연동 (구글 기준과 가장 유사한 금융 데이터 API)
             useEffect(() => {
                 fetch('https://api.exchangerate-api.com/v4/latest/EUR')
                     .then(res => res.json())
                     .then(data => { if(data.rates.KRW) setExchangeRate(data.rates.KRW); })
-                    .catch(err => console.error("환율 로드 실패:", err));
+                    .catch(err => console.error(err));
             }, []);
 
             useEffect(() => {
-                localStorage.setItem('tripDaysV3', JSON.stringify(days));
-                localStorage.setItem('tripDest', destination);
+                localStorage.setItem('tripDaysV4', JSON.stringify(days));
+                localStorage.setItem('tripDestV4', destination);
             }, [days, destination]);
 
-            // 숙박 일정 추가/삭제 기능
             const addDay = () => {
-                const newDay = { id: Date.now(), title: `${days.length + 1}일차`, events: [] };
+                const newDay = { id: Date.now(), date: `Day ${days.length + 1}`, events: [] };
                 setDays([...days, newDay]);
                 setSelectedDayId(newDay.id);
             };
@@ -65,7 +67,7 @@
             const removeDay = (id, e) => {
                 e.stopPropagation();
                 if (days.length === 1) return;
-                if (confirm("이 날의 모든 일정이 삭제됩니다.")) {
+                if (confirm("이 날의 모든 일정을 삭제할까요?")) {
                     const filtered = days.filter(d => d.id !== id);
                     setDays(filtered);
                     if (selectedDayId === id) setSelectedDayId(filtered[0].id);
@@ -78,88 +80,104 @@
                     ...d, events: [...d.events, { ...newEntry, id: Date.now(), cost: Number(newEntry.cost) || 0 }].sort((a,b) => a.time.localeCompare(b.time))
                 } : d));
                 setIsModalOpen(false);
-                setNewEntry({ type: 'visit', title: '', time: '12:00', cost: '', note: '' });
+                setNewEntry({ type: 'visit', title: '', time: '10:00', cost: '', note: '' });
+            };
+
+            const getColors = (type) => {
+                switch (type) {
+                    case 'food': return { bg: "bg-orange-50", text: "text-orange-600", border: "border-orange-100" };
+                    case 'shop': return { bg: "bg-purple-100", text: "text-purple-600", border: "border-purple-200" };
+                    case 'transport': return { bg: "bg-sky-100", text: "text-sky-600", border: "border-sky-200" };
+                    case 'etc': return { bg: "bg-rose-50", text: "text-rose-500", border: "border-rose-100" };
+                    default: return { bg: "bg-lime-100", text: "text-lime-700", border: "border-lime-200" };
+                }
+            };
+
+            const getIcon = (type, colorClass) => {
+                const className = `w-5 h-5 ${colorClass}`;
+                if (type === 'food') return <Utensils className={className} />;
+                if (type === 'shop') return <ShoppingBag className={className} />;
+                if (type === 'transport') return <Car className={className} />;
+                if (type === 'etc') return <Home className={className} />;
+                return <MapPin className={className} />;
             };
 
             const currentDay = days.find(d => d.id === selectedDayId) || days[0];
             const totalSpent = days.reduce((acc, d) => acc + d.events.reduce((s, e) => s + (e.cost || 0), 0), 0);
 
             return (
-                <div className="max-w-md mx-auto h-screen bg-[#FDFCF8] flex flex-col">
-                    <header className="p-5 bg-white border-b border-stone-100">
+                <div className="max-w-md mx-auto h-screen bg-[#FDFCF8] flex flex-col font-sans">
+                    <header className="px-4 pt-6 pb-2 bg-white/90 backdrop-blur-md sticky top-0 z-30 border-b border-stone-100 shadow-sm">
                         <div className="flex justify-between items-center mb-4">
-                            <input className="font-cooper text-xl bg-transparent outline-none w-2/3" value={destination} onChange={e => setDestination(e.target.value)} />
-                            <div className="text-right">
-                                <p className="text-[10px] font-bold text-stone-400 uppercase">Total</p>
-                                <p className="text-lg font-bold">{totalSpent.toLocaleString()} €</p>
-                                <p className="text-[10px] text-emerald-600 font-bold">≈ {(totalSpent * exchangeRate).toLocaleString()}원</p>
+                            <input className="text-xl font-cooper bg-transparent outline-none w-3/4" value={destination} onChange={e => setDestination(e.target.value)} />
+                            <div className="text-right shrink-0">
+                                <span className="text-[10px] font-bold text-stone-400 block uppercase tracking-wider">Total</span>
+                                <span className="text-lg font-bold text-stone-700 leading-none">{totalSpent.toLocaleString()} €</span>
+                                <p className="text-[9px] text-emerald-600 font-bold">≈{(totalSpent * exchangeRate).toLocaleString()}원</p>
                             </div>
                         </div>
-                        {/* 날짜 탭 관리 영역 */}
-                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                        <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide">
                             {days.map((day, idx) => (
-                                <div key={day.id} onClick={() => setSelectedDayId(day.id)} 
-                                     className={`relative flex-shrink-0 px-4 py-2 rounded-xl border transition-all cursor-pointer ${selectedDayId === day.id ? 'bg-black text-white border-black' : 'bg-white border-stone-200 text-stone-400'}`}>
-                                    <span className="text-xs font-bold">{idx + 1}일차</span>
-                                    {days.length > 1 && (
-                                        <button onClick={(e) => removeDay(day.id, e)} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 hover:scale-110">
-                                            <X size={8}/>
-                                        </button>
-                                    )}
-                                </div>
+                                <button key={day.id} onClick={() => setSelectedDayId(day.id)} className={`relative flex flex-col items-center justify-center min-w-[56px] h-[56px] rounded-xl border transition-all ${selectedDayId === day.id ? 'bg-lime-100 border-lime-300 text-lime-800 shadow-sm scale-105' : 'bg-white border-stone-100 text-stone-400'}`}>
+                                    <span className="text-[10px] font-bold uppercase">DAY</span>
+                                    <span className="text-sm font-bold">{idx + 1}</span>
+                                    {days.length > 1 && <div onClick={(e) => removeDay(day.id, e)} className="absolute -top-1 -right-1 bg-stone-200 text-stone-500 rounded-full p-0.5"><X size={8}/></div>}
+                                </button>
                             ))}
-                            <button onClick={addDay} className="flex-shrink-0 px-4 py-2 rounded-xl border-2 border-dashed border-stone-200 text-stone-400 hover:border-stone-400 transition-colors">
-                                <Plus size={16}/>
-                            </button>
+                            <button onClick={addDay} className="min-w-[56px] h-[56px] rounded-xl border-2 border-dashed border-stone-200 text-stone-300 flex items-center justify-center hover:bg-white transition-all"><Plus size={18}/></button>
                         </div>
                     </header>
 
-                    <main className="flex-1 overflow-y-auto p-4 pb-24">
-                        <div className="bg-stone-900 text-white p-5 rounded-2xl mb-6 shadow-xl flex justify-between items-center">
-                             <input className="bg-transparent font-bold text-lg outline-none w-full" value={currentDay.title} 
-                                    onChange={e => setDays(days.map(d => d.id === selectedDayId ? {...d, title: e.target.value} : d))} />
+                    <div className="flex-1 overflow-y-auto px-4 py-5 pb-24">
+                        <div className="bg-stone-800 text-white p-4 rounded-2xl mb-6 flex justify-between items-center shadow-lg">
+                            <input className="bg-transparent font-bold text-lg outline-none w-full" value={currentDay.date} onChange={e => setDays(days.map(d => d.id === selectedDayId ? {...d, date: e.target.value} : d))} />
                         </div>
 
                         <div className="space-y-4">
-                            {currentDay.events.length === 0 && <p className="text-center text-stone-300 py-10 text-sm">등록된 일정이 없습니다.</p>}
-                            {currentDay.events.map(event => (
-                                <div key={event.id} className="bg-white p-4 rounded-2xl border border-stone-100 shadow-sm flex gap-4 animate-in fade-in slide-in-from-bottom-2">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${event.type === 'food' ? 'bg-orange-100 text-orange-500' : 'bg-blue-100 text-blue-500'}`}>
-                                        {event.type === 'food' ? <Utensils size={18}/> : <MapPin size={18}/>}
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex justify-between items-start">
-                                            <span className="text-[10px] font-bold text-stone-400 bg-stone-50 px-2 py-0.5 rounded">{event.time}</span>
-                                            <span className="text-sm font-bold text-stone-700">{event.cost.toLocaleString()} €</span>
+                            {currentDay.events.map((event, index) => {
+                                const style = getColors(event.type);
+                                return (
+                                    <div key={event.id} className="relative pl-3">
+                                        {index !== currentDay.events.length - 1 && <div className="absolute left-[22px] top-10 bottom-[-24px] w-[2px] bg-stone-100"></div>}
+                                        <div className="flex gap-3">
+                                            <div className={`shrink-0 w-10 h-10 rounded-full ${style.bg} flex items-center justify-center border-2 border-white shadow-sm z-10`}>
+                                                {getIcon(event.type, style.text)}
+                                            </div>
+                                            <div className={`flex-1 bg-white p-4 rounded-2xl border ${style.border} shadow-sm`}>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${style.bg} ${style.text}`}>{event.time}</span>
+                                                    <span className="text-[10px] font-bold text-stone-400 ml-auto">{event.cost.toLocaleString()} €</span>
+                                                </div>
+                                                <h3 className="font-bold text-stone-700 text-sm">{event.title}</h3>
+                                                {event.note && <p className="text-xs text-stone-400 mt-1">{event.note}</p>}
+                                            </div>
                                         </div>
-                                        <h4 className="font-bold text-sm mt-1">{event.title}</h4>
-                                        {event.note && <p className="text-xs text-stone-400 mt-1">{event.note}</p>}
                                     </div>
-                                </div>
-                            ))}
-                            <button onClick={() => setIsModalOpen(true)} className="w-full py-4 rounded-2xl border-2 border-dashed border-stone-200 text-stone-400 font-bold text-sm hover:bg-stone-50 transition-all">+ 일정 추가</button>
+                                );
+                            })}
+                            <button onClick={() => setIsModalOpen(true)} className="w-full py-3.5 rounded-xl border-2 border-dashed border-stone-200 text-stone-400 font-bold text-sm hover:border-lime-400 hover:text-lime-600 transition-all">+ 일정 추가</button>
                         </div>
-                    </main>
+                    </div>
 
                     {isModalOpen && (
-                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end z-50">
-                            <div className="bg-white w-full rounded-t-3xl p-6 shadow-2xl animate-in slide-in-from-bottom duration-300">
-                                <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-lg">새 일정 기록</h3><button onClick={() => setIsModalOpen(false)}><X/></button></div>
+                        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end">
+                            <div className="bg-white w-full max-w-md mx-auto p-6 rounded-t-3xl shadow-xl animate-in slide-in-from-bottom">
+                                <div className="flex justify-between items-center mb-6"><h3 className="font-bold">새 일정 기록</h3><button onClick={() => setIsModalOpen(false)}><X/></button></div>
                                 <div className="space-y-4">
-                                    <div className="flex gap-2">
-                                        {['visit', 'food'].map(t => (
-                                            <button key={t} onClick={() => setNewEntry({...newEntry, type: t})} className={`flex-1 py-2 rounded-xl text-xs font-bold border ${newEntry.type === t ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-400 border-stone-200'}`}>
-                                                {t === 'visit' ? '관광/이동' : '식사/카페'}
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {['visit','food','shop','transport'].map(t => (
+                                            <button key={t} onClick={() => setNewEntry({...newEntry, type: t})} className={`py-2 rounded-xl text-xs font-bold border ${newEntry.type === t ? 'bg-stone-800 text-white' : 'bg-white text-stone-400'}`}>
+                                                {t === 'visit' ? '관광' : t === 'food' ? '식사' : t === 'shop' ? '쇼핑' : '이동'}
                                             </button>
                                         ))}
                                     </div>
-                                    <input className="w-full p-4 bg-stone-50 rounded-2xl outline-none focus:ring-2 focus:ring-stone-200" placeholder="어디에 가시나요?" value={newEntry.title} onChange={e => setNewEntry({...newEntry, title: e.target.value})} />
-                                    <div className="flex gap-3">
-                                        <div className="flex-1"><label className="text-[10px] font-bold text-stone-400 ml-2">시간</label><input type="time" className="w-full p-4 bg-stone-50 rounded-2xl outline-none" value={newEntry.time} onChange={e => setNewEntry({...newEntry, time: e.target.value})} /></div>
-                                        <div className="flex-1"><label className="text-[10px] font-bold text-stone-400 ml-2">비용 (€)</label><input type="number" className="w-full p-4 bg-stone-50 rounded-2xl outline-none" placeholder="0" value={newEntry.cost} onChange={e => setNewEntry({...newEntry, cost: e.target.value})} /></div>
+                                    <input className="w-full p-3 bg-stone-50 rounded-xl outline-none" placeholder="장소명" value={newEntry.title} onChange={e => setNewEntry({...newEntry, title: e.target.value})} />
+                                    <div className="flex gap-2">
+                                        <input type="time" className="flex-1 p-3 bg-stone-50 rounded-xl outline-none" value={newEntry.time} onChange={e => setNewEntry({...newEntry, time: e.target.value})} />
+                                        <input type="number" className="flex-1 p-3 bg-stone-50 rounded-xl outline-none" placeholder="비용(€)" value={newEntry.cost} onChange={e => setNewEntry({...newEntry, cost: e.target.value})} />
                                     </div>
-                                    <textarea className="w-full p-4 bg-stone-50 rounded-2xl outline-none h-24 resize-none" placeholder="간단한 메모 (선택)" value={newEntry.note} onChange={e => setNewEntry({...newEntry, note: e.target.value})} />
-                                    <button onClick={handleSaveEvent} className="w-full py-5 bg-lime-400 text-lime-900 font-bold rounded-2xl shadow-lg shadow-lime-100 hover:bg-lime-500 transition-all">일정 저장하기</button>
+                                    <textarea className="w-full p-3 bg-stone-50 rounded-xl outline-none h-20 resize-none" placeholder="메모" value={newEntry.note} onChange={e => setNewEntry({...newEntry, note: e.target.value})} />
+                                    <button onClick={handleSaveEvent} className="w-full py-4 bg-lime-400 text-lime-900 font-bold rounded-xl shadow-lg">저장하기</button>
                                 </div>
                             </div>
                         </div>
