@@ -40,28 +40,34 @@
         const Wallet = (props) => <IconBase {...props}><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></IconBase>;
         const ChevronDown = (props) => <IconBase {...props}><path d="m6 9 6 6 6-6"/></IconBase>;
         const ChevronUp = (props) => <IconBase {...props}><path d="m18 15-6-6-6 6"/></IconBase>;
+        const Calendar = (props) => <IconBase {...props}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></IconBase>;
 
         const TripPlanner = () => {
             const [activeTab, setActiveTab] = useState('itinerary'); 
-            const [destination, setDestination] = useState(() => localStorage.getItem('tripDestV7') || 'Europe Trip ✈️');
+            const [destination, setDestination] = useState(() => localStorage.getItem('tripDestV8') || 'Europe Trip ✈️');
+            const [startDate, setStartDate] = useState(() => localStorage.getItem('tripStartDateV8') || new Date().toISOString().split('T')[0]);
+            
             const [days, setDays] = useState(() => {
-                const saved = localStorage.getItem('tripDaysV7');
-                return saved ? JSON.parse(saved) : [{ id: 1, title: "Day 1", events: [] }];
+                const saved = localStorage.getItem('tripDaysV8');
+                return saved ? JSON.parse(saved) : [{ id: 1, title: "일정 시작", events: [] }];
             });
             const [selectedDayId, setSelectedDayId] = useState(days[0]?.id || 1);
+            
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [isConverterOpen, setIsConverterOpen] = useState(false);
             const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
+            const [isDateSettingsOpen, setIsDateSettingsOpen] = useState(false);
             const [editingEventId, setEditingEventId] = useState(null);
             const [expandedCategory, setExpandedCategory] = useState(null);
-            const [exchangeRate, setExchangeRate] = useState(1719); 
-            const [totalBudget, setTotalBudget] = useState(() => Number(localStorage.getItem('tripBudgetV7')) || 0);
+            const [exchangeRate, setExchangeRate] = useState(1450);
+            const [totalBudget, setTotalBudget] = useState(() => Number(localStorage.getItem('tripBudgetV8')) || 0);
             const [newEntry, setNewEntry] = useState({ type: 'visit', title: '', time: '12:00', cost: '', note: '', items: '' });
             const [convertValues, setConvertValues] = useState({ eur: '', krw: '' });
 
-            useEffect(() => { localStorage.setItem('tripDaysV7', JSON.stringify(days)); }, [days]);
-            useEffect(() => { localStorage.setItem('tripBudgetV7', totalBudget); }, [totalBudget]);
-            useEffect(() => { localStorage.setItem('tripDestV7', destination); }, [destination]);
+            useEffect(() => { localStorage.setItem('tripDaysV8', JSON.stringify(days)); }, [days]);
+            useEffect(() => { localStorage.setItem('tripBudgetV8', totalBudget); }, [totalBudget]);
+            useEffect(() => { localStorage.setItem('tripDestV8', destination); }, [destination]);
+            useEffect(() => { localStorage.setItem('tripStartDateV8', startDate); }, [startDate]);
 
             useEffect(() => {
                 fetch('https://api.exchangerate-api.com/v4/latest/EUR')
@@ -70,16 +76,22 @@
                     .catch(err => console.error(err));
             }, []);
 
+            const getDateForDay = (index) => {
+                const start = new Date(startDate);
+                start.setDate(start.getDate() + index);
+                return `${start.getMonth() + 1}/${start.getDate()}`;
+            };
+
             const addDay = () => {
                 const newId = Date.now();
-                setDays([...days, { id: newId, title: `Day ${days.length + 1}`, events: [] }]);
+                setDays([...days, { id: newId, title: "새로운 일정", events: [] }]);
                 setSelectedDayId(newId);
             };
 
             const deleteDay = (id, e) => {
                 e.stopPropagation();
                 if (days.length <= 1) return;
-                if (confirm("이 날의 모든 일정이 삭제됩니다. 삭제할까요?")) {
+                if (confirm("이 날의 모든 일정이 삭제됩니다.")) {
                     const filtered = days.filter(d => d.id !== id);
                     setDays(filtered);
                     if (selectedDayId === id) setSelectedDayId(filtered[0].id);
@@ -111,33 +123,37 @@
 
             const expensesByCategory = useMemo(() => {
                 const cats = { food: {total: 0, items: []}, visit: {total: 0, items: []}, shop: {total: 0, items: []}, transport: {total: 0, items: []}, etc: {total: 0, items: []} };
-                days.forEach(d => d.events.forEach(e => { 
+                days.forEach((d, idx) => d.events.forEach(e => { 
                     cats[e.type].total += e.cost;
-                    cats[e.type].items.push({...e, dayTitle: d.title});
+                    cats[e.type].items.push({...e, dayCount: `Day ${idx + 1}`});
                 }));
                 return cats;
             }, [days]);
 
-            const currentDay = days.find(d => d.id === selectedDayId) || days[0];
+            const currentDayIndex = days.findIndex(d => d.id === selectedDayId);
+            const currentDay = days[currentDayIndex] || days[0];
 
             return (
                 <div className="max-w-md mx-auto h-screen bg-[#FDFCF8] flex flex-col font-sans text-slate-700">
-                    <header className="px-4 pt-6 pb-2 bg-white/90 border-b border-stone-100 sticky top-0 z-30">
+                    <header className="px-4 pt-6 pb-2 bg-white/90 border-b border-stone-100 sticky top-0 z-30 shadow-sm">
                         <div className="flex justify-between items-center mb-3">
                             <input className="font-cooper text-xl bg-transparent outline-none w-2/3" value={destination} onChange={e => setDestination(e.target.value)} />
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => setIsDateSettingsOpen(true)} className="p-2 bg-stone-100 rounded-full text-stone-600"><Calendar size={18}/></button>
                                 <button onClick={() => setIsConverterOpen(true)} className="p-2 bg-stone-100 rounded-full text-stone-600"><Calculator size={18} /></button>
-                                <div className="text-right">
+                                <div className="text-right ml-1">
                                     <p className="text-[10px] font-bold text-stone-400">TOTAL</p>
                                     <p className="text-lg font-bold leading-none">{stats.toLocaleString()} €</p>
                                 </div>
                             </div>
                         </div>
+                        {/* Day Management Header: MM/DD 표시 */}
                         <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide">
                             {days.map((day, idx) => (
                                 <div key={day.id} className="relative group shrink-0">
                                     <button onClick={() => setSelectedDayId(day.id)} className={`flex flex-col items-center justify-center min-w-[56px] h-[56px] rounded-xl transition-all border ${selectedDayId === day.id ? 'bg-lime-100 border-lime-300 text-lime-800 shadow-sm scale-105' : 'bg-white border-stone-100 text-stone-400'}`}>
-                                        <span className="text-[10px] font-bold uppercase">DAY</span><span className="text-sm font-bold">{idx + 1}</span>
+                                        <span className="text-[10px] font-bold uppercase">DATE</span>
+                                        <span className="text-sm font-bold">{getDateForDay(idx)}</span>
                                     </button>
                                     {days.length > 1 && <button onClick={(e) => deleteDay(day.id, e)} className="absolute -top-1 -right-1 bg-red-400 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100"><X size={8}/></button>}
                                 </div>
@@ -153,15 +169,15 @@
                     <main className="flex-1 overflow-y-auto px-4 py-5 scrollbar-hide">
                         {activeTab === 'itinerary' ? (
                             <div className="space-y-4">
+                                {/* D-1 -> Day 1 수정 */}
                                 <div className="bg-stone-800 text-white p-4 rounded-2xl mb-6 shadow-lg flex justify-between items-center">
                                     <input className="bg-transparent font-bold text-lg outline-none w-full" value={currentDay.title} onChange={e => setDays(days.map(d => d.id === selectedDayId ? {...d, title: e.target.value} : d))} />
-                                    {/* D-1 레이아웃 수정: whitespace-nowrap 추가 */}
-                                    <span className="text-lime-400 font-black text-xl ml-2 whitespace-nowrap">D-{days.findIndex(d => d.id === selectedDayId) + 1}</span>
+                                    <span className="text-lime-400 font-black text-xl ml-2 whitespace-nowrap">Day {currentDayIndex + 1}</span>
                                 </div>
                                 {currentDay.events.map((event, index) => {
                                     const info = categoryStyle[event.type] || categoryStyle.visit;
                                     return (
-                                        <div key={event.id} className="relative pl-3">
+                                        <div key={event.id} className="relative pl-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                             {index !== currentDay.events.length - 1 && <div className="absolute left-[22px] top-10 bottom-[-24px] w-[2px] bg-stone-100"></div>}
                                             <div className="flex gap-3">
                                                 <div className={`shrink-0 w-10 h-10 rounded-full ${info.color.bg} flex items-center justify-center border-2 border-white shadow-sm z-10`}>{info.icon(info.color.text)}</div>
@@ -183,7 +199,7 @@
                             </div>
                         ) : (
                             <div className="space-y-5">
-                                <div className="bg-white rounded-3xl p-5 shadow-sm border border-stone-100">
+                                <div className="bg-white rounded-3xl p-5 shadow-sm border border-stone-100 animate-in zoom-in-95 duration-300">
                                     <div className="flex justify-between items-start mb-4">
                                         <div><p className="text-stone-400 text-[10px] font-bold uppercase tracking-wider mb-1">Total Budget</p>{totalBudget === 0 ? <button onClick={() => setIsBudgetModalOpen(true)} className="text-blue-500 text-sm font-bold underline">금액 입력</button> : <h2 onClick={() => setIsBudgetModalOpen(true)} className="text-2xl font-black text-stone-800 cursor-pointer">{totalBudget.toLocaleString()} €</h2>}</div>
                                         <div className="text-right"><p className="text-stone-400 text-[10px] font-bold uppercase tracking-wider mb-1">Spent</p><h2 className="text-xl font-black text-stone-700">{stats.toLocaleString()} €</h2></div>
@@ -207,7 +223,8 @@
                                                         {data.items.map(item => (
                                                             <div key={item.id} className="flex justify-between items-start text-xs">
                                                                 <div className="flex-1 pr-4">
-                                                                    <p className="font-bold text-stone-700">{item.dayTitle}: {item.title}</p>
+                                                                    {/* 상세 지출 내역에서도 Day X로 표시 */}
+                                                                    <p className="font-bold text-stone-700">{item.dayCount}: {item.title}</p>
                                                                     {item.items && <p className="text-stone-400 mt-0.5">{item.items}</p>}
                                                                 </div>
                                                                 <span className="font-bold text-stone-600 whitespace-nowrap">{item.cost.toLocaleString()} €</span>
@@ -223,7 +240,18 @@
                         )}
                     </main>
 
-                    {/* Modals */}
+                    {/* Date Settings Modal */}
+                    {isDateSettingsOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-6" onClick={() => setIsDateSettingsOpen(false)}>
+                            <div className="bg-white w-full max-w-xs p-6 rounded-3xl shadow-xl" onClick={e => e.stopPropagation()}>
+                                <h3 className="font-bold mb-4 flex items-center gap-2"><Calendar className="text-blue-500"/> 여행 시작일 설정</h3>
+                                <input type="date" className="w-full bg-stone-50 p-4 rounded-xl font-bold outline-none mb-4" value={startDate} onChange={e => setStartDate(e.target.value)}/>
+                                <button onClick={() => setIsDateSettingsOpen(false)} className="w-full py-3 bg-stone-800 text-white font-bold rounded-xl">확인</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Other Modals (Converter, Budget, Add Entry) - 기존과 동일 */}
                     {isModalOpen && (
                         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm p-4">
                             <div className="bg-white w-full max-w-md p-6 rounded-t-3xl shadow-xl animate-in slide-in-from-bottom duration-300">
@@ -237,8 +265,7 @@
                                         <input type="time" className="flex-1 bg-stone-50 p-3 rounded-xl outline-none text-sm" value={newEntry.time} onChange={e => setNewEntry({...newEntry, time: e.target.value})}/>
                                         <input type="number" className="flex-1 bg-stone-50 p-3 rounded-xl outline-none text-sm" placeholder="비용(€)" value={newEntry.cost} onChange={e => setNewEntry({...newEntry, cost: e.target.value})}/>
                                     </div>
-                                    {/* 상세 리스트 입력 필드 추가 */}
-                                    <input className="w-full bg-stone-50 p-3 rounded-xl outline-none text-sm" placeholder="메뉴 또는 쇼핑 리스트 (예: 봉골레, 립스틱 등)" value={newEntry.items} onChange={e => setNewEntry({...newEntry, items: e.target.value})}/>
+                                    <input className="w-full bg-stone-50 p-3 rounded-xl outline-none text-sm" placeholder="메뉴 또는 쇼핑 리스트" value={newEntry.items} onChange={e => setNewEntry({...newEntry, items: e.target.value})}/>
                                     <button onClick={handleSaveEntry} className="w-full bg-lime-400 text-lime-900 py-4 rounded-xl font-bold shadow-lg mt-2">저장하기</button>
                                 </div>
                             </div>
@@ -254,7 +281,6 @@
                                     <div className="relative"><label className="text-[10px] font-bold text-stone-400 absolute top-2 left-3">EUR (€)</label><input type="number" className="w-full bg-stone-50 p-3 pt-6 rounded-xl text-lg font-bold outline-none border border-transparent focus:border-purple-300 transition-all" value={convertValues.eur} onChange={e => setConvertValues({eur: e.target.value, krw: e.target.value ? Math.round(e.target.value * exchangeRate) : ''})}/></div>
                                     <div className="relative"><label className="text-[10px] font-bold text-stone-400 absolute top-2 left-3">KRW (원)</label><input type="number" className="w-full bg-stone-50 p-3 pt-6 rounded-xl text-lg font-bold outline-none border border-transparent focus:border-purple-300 transition-all" value={convertValues.krw} onChange={e => setConvertValues({eur: e.target.value ? (e.target.value / exchangeRate).toFixed(2) : '', krw: e.target.value})}/></div>
                                 </div>
-                                <button onClick={() => setConvertValues({eur: '', krw: ''})} className="w-full mt-6 py-2 bg-stone-100 text-stone-400 font-bold text-xs rounded-lg">초기화</button>
                             </div>
                         </div>
                     )}
@@ -262,7 +288,7 @@
                     {isBudgetModalOpen && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-6" onClick={() => setIsBudgetModalOpen(false)}>
                             <div className="bg-white w-full max-w-xs p-6 rounded-3xl shadow-xl" onClick={e => e.stopPropagation()}>
-                                <h3 className="font-bold mb-4 flex items-center gap-2 font-cooper"><Wallet className="text-emerald-500"/> Set Budget</h3>
+                                <h3 className="font-bold mb-4 flex items-center gap-2"><Wallet className="text-emerald-500"/> 예산 설정</h3>
                                 <input type="number" className="w-full bg-stone-50 p-4 rounded-xl text-lg font-bold outline-none mb-4" placeholder="총 예산(€)" value={totalBudget || ''} onChange={e => setTotalBudget(Number(e.target.value))}/>
                                 <button onClick={() => setIsBudgetModalOpen(false)} className="w-full py-4 bg-emerald-500 text-white font-bold rounded-xl shadow-lg">예산 저장</button>
                             </div>
